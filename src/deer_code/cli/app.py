@@ -199,7 +199,7 @@ class ConsoleApp(App):
                 terminal_view.write(f"$ ls {" ".join(tool_args.values())}")
             elif tool_name == "todo_write":
                 bottom_right_tabs.active = "todo-tab"
-                todo_list_view.update_items(tool_args["items"])
+                todo_list_view.update_items(tool_args["todos"])
             elif tool_name == "text_editor":
                 command = tool_args["command"]
                 if command == "create":
