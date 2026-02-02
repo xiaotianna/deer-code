@@ -1,3 +1,12 @@
+"""`tree` 工具：以树形结构展示目录内容（类似系统的 tree 命令）。
+
+实现方式：
+- 递归遍历目录，优先展示目录再展示文件；
+- 支持 max_depth 限制遍历深度，避免输出过大；
+- 结合 DEFAULT_IGNORE_PATTERNS 过滤常见噪音目录/文件；
+- 输出末尾追加 reminders（例如 todo 未完成提醒）。
+"""
+
 import fnmatch
 from pathlib import Path
 from typing import Optional
@@ -10,7 +19,7 @@ from .ignore import DEFAULT_IGNORE_PATTERNS
 
 
 def should_ignore(path: Path, ignore_patterns: list[str]) -> bool:
-    """Check if a path should be ignored based on ignore patterns."""
+    """根据 ignore_patterns 判断某个 path 是否应被跳过。"""
     path_str = str(path)
     name = path.name
 
@@ -32,7 +41,7 @@ def generate_tree(
     current_depth: int = 0,
     ignore_patterns: list[str] = None,
 ) -> list[str]:
-    """Recursively generate tree structure."""
+    """递归生成树形结构的每一行文本（不包含最顶层根路径那一行）。"""
     if ignore_patterns is None:
         ignore_patterns = []
 
@@ -79,6 +88,7 @@ def generate_tree(
                 lines.append(f"{prefix}{connector}{entry.name}")
 
     except PermissionError:
+        # 遇到无权限目录时不中断整体输出，改为在树中提示该分支不可访问。
         lines.append(f"{prefix}[Permission Denied]")
 
     return lines

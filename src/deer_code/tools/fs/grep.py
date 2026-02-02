@@ -1,3 +1,11 @@
+"""`grep` 工具：基于 ripgrep（rg）进行正则搜索。
+
+为什么封装成工具：
+- 统一在 Agent 侧使用 rg，避免用 Bash 直接跑 grep/rg（更难约束、也更难解析输出）；
+- 自动附加默认 ignore 规则，减少噪音与性能开销；
+- 提供 output_mode / 上下文行数 / 语言类型过滤 / 多行匹配等参数。
+"""
+
 import subprocess
 from typing import Literal, Optional
 
@@ -96,6 +104,7 @@ def grep_tool(
 
     # Apply default ignore patterns
     for ignore_pattern in DEFAULT_IGNORE_PATTERNS:
+        # rg 的 --glob 支持 “!pattern” 表示排除；这里把默认忽略模式转换为排除 glob。
         cmd.extend(["--glob", f"!{ignore_pattern}"])
 
     # Add multiline mode

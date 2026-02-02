@@ -1,3 +1,11 @@
+"""`todo_write` 工具：把最新的 todo 列表写回 Agent state。
+
+在这个项目里，todo 更像是一种“显式任务跟踪状态”：
+- Agent 通过调用 todo_write 来更新任务清单；
+- 其他工具会读取 state 里的 todos，并在必要时生成提醒（reminders）；
+- UI 层也可以展示 todos，帮助用户理解 Agent 的执行进度。
+"""
+
 from typing import Annotated
 
 from langchain.messages import ToolMessage
@@ -17,6 +25,7 @@ def todo_write_tool(
         todos: A list of TodoItem objects.
     """
     # Do nothing, but save the latest to-dos to the state.
+    # 这里通过返回 Command(update=...) 的方式，把 todos 和一条 ToolMessage 写回 state。
 
     unfinished_todos = []
     for todo in todos:
@@ -25,6 +34,7 @@ def todo_write_tool(
 
     message = f"Successfully updated the TODO list with {len(todos)} items."
     if len(unfinished_todos) > 0:
+        # 这条提示信息会作为 ToolMessage 写入 messages，便于 UI/日志显示工具调用结果。
         message += f" {len(unfinished_todos)} todo{' is' if len(unfinished_todos) == 1 else 's are'} not completed."
     else:
         message += " All todos are completed."

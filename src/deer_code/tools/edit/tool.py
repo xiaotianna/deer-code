@@ -1,3 +1,12 @@
+"""`text_editor` 工具：给 Agent 提供可控的文件查看/编辑能力。
+
+设计要点：
+- 只允许绝对路径，避免在不明确位置写文件。
+- 把编辑操作拆成更“原子”的命令：view / create / str_replace / insert，
+  这样模型更容易按步骤完成修改、并在失败时回退到 view 获取更多上下文。
+- 在每次工具返回末尾追加 reminders，用于提示 todo 工作流收尾。
+"""
+
 from pathlib import Path
 from typing import Optional
 
@@ -42,8 +51,10 @@ def text_editor_tool(
     reminders = generate_reminders(runtime)
     try:
         editor = TextEditor()
+        # 统一在入口处校验路径合法性（目前仅校验必须为绝对路径）。
         editor.validate_path(command, _path)
         if command == "view":
+            # 返回内容格式模拟 `cat -n`，便于模型在后续 str_replace/insert 时引用行号与上下文。
             return f"Here's the result of running `cat -n` on {_path}:\n\n```\n{editor.view(_path, view_range)}\n```{reminders}"
         elif command == "str_replace" and old_str is not None and new_str is not None:
             occurrences = editor.str_replace(_path, old_str, new_str)
@@ -54,6 +65,7 @@ def text_editor_tool(
         elif command == "create":
             if _path.is_dir():
                 return f"Error: the path {_path} is a directory. Please provide a valid file path.{reminders}"
+            # create 既可用于新建文件，也可用于覆盖已有文件（由上层提示词约束其使用方式）。
             editor.write_file(_path, file_text if file_text is not None else "")
             return f"File successfully created at {_path}.{reminders}"
         else:

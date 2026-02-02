@@ -19,6 +19,11 @@ class TextEditor:
     def validate_path(self, command: TextEditorCommand, path: Path):
         """Check that the path is absolute.
 
+        只允许绝对路径的原因：
+        - Agent 往往缺少“当前工作目录”的稳定概念；
+        - 使用绝对路径可以减少误写到未知位置的风险；
+        - 也更容易在工具返回中明确指向同一个文件。
+
         Args:
             command: The command to execute.
             path: The path to the file or directory.
@@ -92,6 +97,10 @@ class TextEditor:
     def str_replace(self, path: Path, old_str: str, new_str: str | None):
         """Replace all occurrences of old_str with new_str in the file.
 
+        说明：
+        - 这里使用 `str.replace` 是“全量替换”，不做语义级 diff；
+        - 若 `old_str` 过短/不唯一，可能替换到多处，因此调用方应提供足够上下文让它更唯一。
+
         Args:
             path: The path to the file.
             old_str: The string to be replaced. The edit will FAIL if `old_str` is not unique in the file. Provide a larger string with more surrounding context to make it unique.
@@ -132,6 +141,9 @@ class TextEditor:
 
     def insert(self, path: Path, insert_line: int, new_str: str):
         """Insert text at a specific line in the file.
+
+        注意：insert_line 的语义是“在某一行之后插入”，并支持 0 表示文件开头插入。
+        为了减少歧义，这里把插入位置限制在 [0, len(lines)] 之间。
 
         Args:
             path: The path to the file to modify.
@@ -196,6 +208,8 @@ class TextEditor:
     def write_file(self, path: Path, content: str):
         """Write content to a file.
 
+        写入前会确保父目录存在（mkdir -p 语义），便于一次性创建新文件路径。
+
         Args:
             path: The path to the file to write.
             content: The content to write.
@@ -214,6 +228,7 @@ class TextEditor:
         file_content: str,
         init_line: int = 1,
     ):
+        # 输出格式与 `cat -n` 类似：行号右对齐，便于模型引用具体位置。
         lines = file_content.splitlines()
         lines = [f"{i + init_line:>3} {line}" for i, line in enumerate(lines)]
         file_content = "\n".join(lines)

@@ -5,7 +5,13 @@ import pexpect
 
 
 class BashTerminal:
-    """A keep-alive terminal for executing bash commands."""
+    """一个“常驻”的 bash 会话封装。
+
+    与一次性 `subprocess.run` 不同，这里通过 pexpect 维持一个持续的 shell：
+    - 可以保留 shell 内部状态（例如当前目录、已导出的环境变量等）；
+    - 更贴近开发者在真实终端里连续输入命令的体验；
+    - 通过自定义 PS1 提示符来判定命令何时执行完毕。
+    """
 
     def __init__(self, cwd=None):
         """
@@ -26,6 +32,7 @@ class BashTerminal:
 
         # Change to specified directory
         if cwd:
+            # 用 execute 统一走“发送命令 -> 等待 prompt”的逻辑
             self.execute(f'cd "{self.cwd}"')
 
     def execute(self, command):
@@ -52,6 +59,7 @@ class BashTerminal:
         if lines and lines[0].strip() == command.strip():
             lines = lines[1:]
 
+        # pexpect 可能保留一些空白与控制字符，这里做一次规整。
         result = "\n".join([line.strip() for line in lines]).strip()
         # Remove terminal control characters
         result = re.sub(r"\x1b\[[0-9;]*m", "", result)
@@ -68,7 +76,7 @@ class BashTerminal:
         return result.strip()
 
     def close(self):
-        """Close shell session"""
+        """关闭 shell 会话（如果仍存活）。"""
         if self.shell.isalive():
             self.shell.sendline("exit")
             self.shell.close()

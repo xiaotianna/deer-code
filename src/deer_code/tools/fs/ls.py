@@ -1,3 +1,12 @@
+"""`ls` 工具：列出目录下的文件与子目录（带 match/ignore 过滤）。
+
+实现目标：
+- 强制绝对路径，降低误操作与歧义；
+- 先按“目录优先、名字排序”输出，提升可读性；
+- 默认附加一组常见 ignore 规则，避免 node_modules、.git 等干扰；
+- 在返回末尾追加 reminders（例如 todo 未完成提醒）。
+"""
+
 import fnmatch
 from pathlib import Path
 from typing import Optional
@@ -46,11 +55,13 @@ def ls_tool(
         filtered_items = []
         for item in items:
             for pattern in match:
+                # match 只针对“名称”匹配（而非完整路径），便于用户写简单模式如 *.py
                 if fnmatch.fnmatch(item.name, pattern):
                     filtered_items.append(item)
                     break
         items = filtered_items
 
+    # ignore 合并：用户传入 + 默认忽略规则
     ignore = (ignore or []) + DEFAULT_IGNORE_PATTERNS
     filtered_items = []
     for item in items:
