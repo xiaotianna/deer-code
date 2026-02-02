@@ -2,7 +2,7 @@
   "$schema": "https://langgra.ph/schema.json",
   "dependencies": ["."],
   "env": {
-    "PROJECT_ROOT": "/your/project/path"
+    "PROJECT_ROOT": "/Users/xxx/Desktop/demo"
   },
   "graphs": {
     "coding_agent": "deer_code.agents.coding_agent:create_coding_agent_for_debug"
