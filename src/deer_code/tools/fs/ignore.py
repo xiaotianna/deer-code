@@ -1,4 +1,11 @@
-"""文件/目录忽略规则集合（供 ls/grep/tree 等工具复用）。
+"""Common ignore patterns for files/directories, shared by ls/grep/tree tools.
+
+文件/目录忽略规则集合（供 ls/grep/tree 等工具复用）。
+
+These patterns are used to:
+- Hide dependency folders, build artifacts, caches, VCS metadata, etc.
+- Reduce noise and keep tool output focused on application code.
+- Improve performance by skipping large or irrelevant directories.
 
 这些模式用于：
 - 默认隐藏依赖目录、构建产物、缓存、版本控制目录等“噪音”；
@@ -6,6 +13,7 @@
 - 同时减少搜索/遍历时的性能开销。
 """
 
+# 默认忽略的文件/目录模式
 DEFAULT_IGNORE_PATTERNS = [
     # Version Control
     ".git/**",

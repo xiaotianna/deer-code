@@ -31,4 +31,10 @@ def generate_reminders(runtime: ToolRuntime):
         reminders.append(
             "- Immediately update the TODO list using the `todo_write` tool."
         )
+    """
+    输出示例：
+    IMPORTANT:
+    - 3 todos are not completed. Before you present the final result to the user, **make sure** all the todos are completed.
+    - Immediately update the TODO list using the `todo_write` tool.
+    """
     return "\n\nIMPORTANT:\n" + "\n".join(reminders) if len(reminders) > 0 else ""

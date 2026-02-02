@@ -19,25 +19,28 @@ from .types import TodoItem, TodoStatus
 def todo_write_tool(
     todos: list[TodoItem], tool_call_id: Annotated[str, InjectedToolCallId]
 ):
-    """Update the entire TODO list with the latest items.
+    """用最新条目覆盖并更新整个 TODO 列表。
 
-    Args:
-        todos: A list of TodoItem objects.
+    参数：
+        todos：TodoItem 的列表（将被写入到 Agent state 的 `todos` 字段中）。
     """
-    # Do nothing, but save the latest to-dos to the state.
-    # 这里通过返回 Command(update=...) 的方式，把 todos 和一条 ToolMessage 写回 state。
+    # 该工具本身不做“业务处理”，核心职责是把最新的 todos 写回到 Agent 的 state。
+    # 这里通过返回 Command(update=...) 的方式，把 `todos` 和一条 ToolMessage 写回 state，
+    # 以便后续工具（例如 reminders）或 UI 能够读取并展示最新的任务进度。
 
+    # 收集未完成的 todo（用于生成更友好的提示信息）。
     unfinished_todos = []
     for todo in todos:
         if todo.status != TodoStatus.completed and todo.status != TodoStatus.cancelled:
             unfinished_todos.append(todo)
 
-    message = f"Successfully updated the TODO list with {len(todos)} items."
+    # 生成工具调用结果消息：写入 messages，便于 UI/日志展示。
+    message = f"已成功更新 TODO 列表，共 {len(todos)} 项。"
     if len(unfinished_todos) > 0:
-        # 这条提示信息会作为 ToolMessage 写入 messages，便于 UI/日志显示工具调用结果。
-        message += f" {len(unfinished_todos)} todo{' is' if len(unfinished_todos) == 1 else 's are'} not completed."
+        # 中文不需要处理单复数：直接说明还有多少项未完成即可。
+        message += f"其中 {len(unfinished_todos)} 项未完成。"
     else:
-        message += " All todos are completed."
+        message += "全部已完成。"
 
     return Command(
         update={

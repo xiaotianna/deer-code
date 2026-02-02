@@ -1,4 +1,12 @@
-"""`ls` 工具：列出目录下的文件与子目录（带 match/ignore 过滤）。
+"""`ls` tool: list files and directories with optional match/ignore filters.
+
+`ls` 工具：列出目录下的文件与子目录（带 match/ignore 过滤）。
+
+Design goals:
+- Enforce absolute paths to avoid ambiguity and accidental operations.
+- Sort directories before files, both alphabetically, for better readability.
+- Apply a default set of ignore patterns (e.g. node_modules, .git) to reduce noise.
+- Append reminders (e.g. unfinished todos) at the end of the output.
 
 实现目标：
 - 强制绝对路径，降低误操作与歧义；
@@ -27,10 +35,15 @@ def ls_tool(
 ):
     """Lists files and directories in a given path. Optionally provide an array of glob patterns to match and ignore.
 
+    在指定路径下列出文件和子目录，可选提供 glob 模式进行匹配或忽略。
+
     Args:
         path: The absolute path to list files and directories from. Relative paths are **not** allowed.
+              要列出内容的绝对路径，不允许相对路径。
         match: An optional array of glob patterns to match.
+               可选的匹配模式列表（仅保留名称匹配这些模式的条目）。
         ignore: An optional array of glob patterns to ignore.
+                可选的忽略模式列表（会与默认的忽略规则合并）。
     """
     _path = Path(path)
     if not _path.is_absolute():
@@ -41,16 +54,16 @@ def ls_tool(
     if not _path.is_dir():
         return f"Error: the path {path} is not a directory. Please provide a valid directory path."
 
-    # Get all items in the directory
+    # 获取目录下的所有项
     try:
         items = list(_path.iterdir())
     except PermissionError:
         return f"Error: permission denied to access the path {path}."
 
-    # Sort items: directories first, then files, both alphabetically
+    # 排序：目录优先，文件其次，按字母顺序
     items.sort(key=lambda x: (x.is_file(), x.name.lower()))
 
-    # Apply match patterns if provided
+    # 应用匹配模式（如果提供）
     if match:
         filtered_items = []
         for item in items:
@@ -61,7 +74,7 @@ def ls_tool(
                     break
         items = filtered_items
 
-    # ignore 合并：用户传入 + 默认忽略规则
+    # 合并 ignore：用户传入 + 默认忽略规则
     ignore = (ignore or []) + DEFAULT_IGNORE_PATTERNS
     filtered_items = []
     for item in items:
@@ -76,7 +89,7 @@ def ls_tool(
 
     reminders = generate_reminders(runtime)
 
-    # Format the output
+    # 格式化输出
     if not items:
         return f"No items found in {path}.{reminders}"
 
